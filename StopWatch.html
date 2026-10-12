@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Precision Stopwatch</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #0f172a; /* Sleek dark slate canvas theme */
+      color: #f8fafc;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .stopwatch-container {
+      text-align: center;
+      background: #1e293b;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      width: 350px;
+    }
+
+    h1 {
+      margin-top: 0;
+      color: #94a3b8;
+      font-size: 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    #display {
+      font-size: 3.5rem;
+      font-weight: bold;
+      margin-bottom: 30px;
+      font-variant-numeric: tabular-nums; 
+    }
+
+    .ms {
+      font-size: 2rem;
+      color: #38bdf8; 
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 25px;
+    }
+
+    button {
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex: 1;
+    }
+
+    #start-btn {
+      background-color: #22c55e;
+      color: white;
+    }
+
+    #start-btn.paused {
+      background-color: #eab308; 
+    }
+
+    #lap-btn {
+      background-color: #64748b;
+      color: white;
+    }
+
+    #lap-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    #reset-btn {
+      background-color: #ef4444;
+      color: white;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      filter: brightness(1.1);
+    }
+
+    
+    .lap-box {
+      max-height: 150px;
+      overflow-y: auto;
+      border-top: 1px solid #334155;
+      padding-top: 15px;
+      text-align: left;
+    }
+
+    ol {
+      padding-left: 20px;
+      margin: 0;
+    }
+
+    li {
+      padding: 8px 0;
+      border-bottom: 1px solid #334155;
+      color: #cbd5e1;
+      font-variant-numeric: tabular-nums;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="stopwatch-container">
+    <h1>Stopwatch</h1>
+    
+    <div id="display">00:00.<span class="ms">00</span></div>
+    
+
+    <div class="controls">
+      <button id="start-btn">Start</button>
+      <button id="lap-btn" disabled>Lap</button>
+      <button id="reset-btn">Reset</button>
+    </div>
+    
+
+    <div class="lap-box">
+      <ol id="lap-list"></ol>
+    </div>
+  </div>
+
+  <script>
+    const display = document.getElementById("display");
+    const startBtn = document.getElementById("start-btn");
+    const lapBtn = document.getElementById("lap-btn");
+    const resetBtn = document.getElementById("reset-btn");
+    const lapList = document.getElementById("lap-list");
+
+    let totalMilliseconds = 0;
+    let timerInterval = null;
+    let isRunning = false;
+
+    const formatTime = (totalMs) => {
+      let mins = Math.floor(totalMs / 60000);
+      let secs = Math.floor((totalMs % 60000) / 1000);
+      let ms = Math.floor((totalMs % 1000) / 10);
+
+      if (mins < 10) mins = "0" + mins;
+      if (secs < 10) secs = "0" + secs;
+      if (ms < 10) ms = "0" + ms;
+
+      return `${mins}:${secs}:${ms}`;
+    };
+
+    const updateTime = () => {
+      totalMilliseconds += 10;
+      const formatted = formatTime(totalMilliseconds);
+      const mainTime = formatted.slice(0, 5);
+      const msTime = formatted.slice(6, 8);
+      display.innerHTML = `${mainTime}.<span class="ms">${msTime}</span>`;
+    };
+
+    const toggleStart = () => {
+      if (!isRunning) {
+        timerInterval = setInterval(updateTime, 10);
+        startBtn.innerText = "Pause";
+        startBtn.classList.add("paused");
+        lapBtn.disabled = false;
+        isRunning = true;
+      } else {
+        clearInterval(timerInterval);
+        startBtn.innerText = "Start";
+        startBtn.classList.remove("paused");
+        isRunning = false;
+      }
+    };
+
+    const recordLap = () => {
+      const currentFormattedTime = formatTime(totalMilliseconds);
+      const mainTime = currentFormattedTime.slice(0, 5);
+      const msTime = currentFormattedTime.slice(6, 8);
+      
+      const li = document.createElement("li");
+      const lapNumber = lapList.children.length + 1;
+      
+      li.innerHTML = `Lap ${lapNumber}: ${mainTime}.<span class="ms" style="font-size: 1rem;">${msTime}</span>`;
+      lapList.appendChild(li);
+      
+
+      const lapBox = document.querySelector(".lap-box");
+      lapBox.scrollTop = lapBox.scrollHeight;
+    };
+
+    const resetStopwatch = () => {
+      clearInterval(timerInterval);
+      totalMilliseconds = 0;
+      timerInterval = null;
+      isRunning = false;
+      display.innerHTML = `00:00.<span class="ms">00</span>`;
+      lapList.innerHTML = "";
+      startBtn.innerText = "Start";
+      startBtn.classList.remove("paused");
+      lapBtn.disabled = true;
+    };
+
+    startBtn.addEventListener("click", toggleStart);
+    lapBtn.addEventListener("click", recordLap);
+    resetBtn.addEventListener("click", resetStopwatch);
+  </script>
+</body>
+</html>
